@@ -1,0 +1,182 @@
+{
+  "passed": 44,
+  "total": 44,
+  "tests": [
+    {
+      "name": "Seed relationships, active loans, copy states and financial balances",
+      "pass": true
+    },
+    {
+      "name": "Loan dates follow copy acquisition and member registration dates",
+      "pass": true
+    },
+    {
+      "name": "Data fits the explicit LocalStorage quota budget",
+      "pass": true
+    },
+    {
+      "name": "Historical physical copy loans never overlap",
+      "pass": true
+    },
+    {
+      "name": "Register a member with unique email and card",
+      "pass": true
+    },
+    {
+      "name": "Reject duplicate email without mutating saved state",
+      "pass": true
+    },
+    {
+      "name": "Issue links member, physical copy and title",
+      "pass": true
+    },
+    {
+      "name": "Duplicate issue of a physical copy is rejected atomically",
+      "pass": true
+    },
+    {
+      "name": "Members with active loans cannot be deleted or archived",
+      "pass": true
+    },
+    {
+      "name": "Suspended and expired members cannot borrow",
+      "pass": true
+    },
+    {
+      "name": "Renewal extends due date and keeps history",
+      "pass": true
+    },
+    {
+      "name": "Renewal limit blocks further extensions",
+      "pass": true
+    },
+    {
+      "name": "Reservation holds a copy and prevents duplicate reservations",
+      "pass": true
+    },
+    {
+      "name": "Return updates the copy and offers it to reservation queue",
+      "pass": true
+    },
+    {
+      "name": "Another member cannot issue a reserved copy",
+      "pass": true
+    },
+    {
+      "name": "Reservation holder can issue and fulfill reservation",
+      "pass": true
+    },
+    {
+      "name": "Closed loans cannot be returned twice",
+      "pass": true
+    },
+    {
+      "name": "Overdue return records one consistent fine",
+      "pass": true
+    },
+    {
+      "name": "Partial payment, full payment, receipt, and overpayment protection",
+      "pass": true
+    },
+    {
+      "name": "Damaged return never becomes available",
+      "pass": true
+    },
+    {
+      "name": "Fine waiver requires a reason and keeps zero balance",
+      "pass": true
+    },
+    {
+      "name": "Receive acquisition partially, then complete, without duplicate copies",
+      "pass": true
+    },
+    {
+      "name": "New-title acquisition creates a catalog title and physical copies",
+      "pass": true
+    },
+    {
+      "name": "Purchase order transitions create exactly one acquisition per line",
+      "pass": true
+    },
+    {
+      "name": "Study room bookings reject overlaps and over-capacity groups",
+      "pass": true
+    },
+    {
+      "name": "Cancel and edit bookings preserve availability rules",
+      "pass": true
+    },
+    {
+      "name": "Event registration rejects duplicates and tracks attendance",
+      "pass": true
+    },
+    {
+      "name": "Inventory adjustments produce movement history and prevent negative stock",
+      "pass": true
+    },
+    {
+      "name": "Referenced category and author deletion is prevented",
+      "pass": true
+    },
+    {
+      "name": "Bookmark and digital reading history persist",
+      "pass": true
+    },
+    {
+      "name": "Subscription renewal updates expiry and associated expenditure",
+      "pass": true
+    },
+    {
+      "name": "Expired reservations release copies before reassigning the queue",
+      "pass": true
+    },
+    {
+      "name": "Shelf capacity prevents copy creation overflow",
+      "pass": true
+    },
+    {
+      "name": "Active physical copy metadata can be edited without releasing it",
+      "pass": true
+    },
+    {
+      "name": "Stale-tab revisions are detected before saving",
+      "pass": true
+    },
+    {
+      "name": "SQL sample results are simulated and destructive SQL never changes data",
+      "pass": true
+    },
+    {
+      "name": "Stored changes survive reinitialization",
+      "pass": true
+    },
+    {
+      "name": "Quota failure rolls back the entire mutation",
+      "pass": true
+    },
+    {
+      "name": "Simulated sign-in supports temporary and remembered sessions",
+      "pass": true
+    },
+    {
+      "name": "Static entry and module pages use correct relative roots",
+      "pass": true
+    },
+    {
+      "name": "Dashboard and reports produce data-driven markup",
+      "pass": true
+    },
+    {
+      "name": "All schema forms and module row renderers build without exceptions",
+      "pass": true
+    },
+    {
+      "name": "Reset preserves unrelated storage and clears only Folio preferences and sessions",
+      "pass": true
+    },
+    {
+      "name": "Export artifacts are generated as CSV and real ZIP-based XLSX",
+      "pass": true
+    }
+  ]
+}
