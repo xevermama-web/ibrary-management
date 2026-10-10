@@ -1,24 +1,1419 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Folio: a complete browser-only library management demonstration.">
-<meta name="theme-color" content="#101b20"><title>Login · Folio Library</title>
-<link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
-<script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('folio_library_theme'))||'dark';}catch(e){}</script>
-<link rel="stylesheet" href="assets/css/app.css">
-<script defer src="assets/js/config.js"></script>
-<script defer src="assets/js/schema.js"></script>
-<script defer src="assets/js/mock-data.js"></script>
-<script defer src="assets/js/storage.js"></script>
-<script defer src="assets/js/domain.js"></script>
-<script defer src="assets/js/export.js"></script>
-<script defer src="assets/js/components.js"></script>
-<script defer src="assets/js/insights.js"></script>
-<script defer src="assets/js/workflows.js"></script>
-<script defer src="assets/js/vault.js"></script>
-<script defer src="assets/js/auth.js"></script>
-<script defer src="assets/js/app.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090e16">
+  <title>Sign in · Folio Library</title>
+
+  <!-- Uses your existing login credentials. -->
+  <script src="assets/js/config.js"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090e16;
+      --text: #edf6f3;
+      --muted: #93a8ac;
+      --accent: #86e4c4;
+      --accent-dark: #102e25;
+      --panel: rgba(19, 31, 42, .76);
+      --input: rgba(7, 17, 27, .55);
+      --border: rgba(206, 245, 231, .13);
+      --soft: rgba(134, 228, 196, .08);
+      --error: #ffadb5;
+      --shadow: rgba(0, 0, 0, .32);
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #edf5f2;
+      --text: #173b32;
+      --muted: #667e77;
+      --accent: #227f64;
+      --accent-dark: #fff;
+      --panel: rgba(255, 255, 255, .77);
+      --input: rgba(243, 249, 246, .82);
+      --border: rgba(28, 92, 71, .14);
+      --soft: rgba(34, 127, 100, .07);
+      --error: #b33d52;
+      --shadow: rgba(38, 80, 64, .13);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; overflow-x: hidden; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      transition: background .5s, color .5s;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: wait; }
+
+    button:focus-visible,
+    input:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 5px;
+    }
+
+    svg {
+      width: 21px;
+      height: 21px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .ambient {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      width: 620px;
+      height: 620px;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: .2;
+      will-change: transform;
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+
+    .orb.one {
+      background: #43c8a3;
+      left: -240px;
+      top: -250px;
+    }
+
+    .orb.two {
+      background: #5261d4;
+      right: -230px;
+      top: 12%;
+      animation-delay: -8s;
+      animation-duration: 24s;
+    }
+
+    .orb.three {
+      background: #208f93;
+      width: 420px;
+      height: 420px;
+      left: 35%;
+      bottom: -300px;
+      animation-delay: -13s;
+    }
+
+    .grid {
+      position: absolute;
+      inset: 0;
+      opacity: .19;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 68px 68px;
+      mask-image: radial-gradient(ellipse at center, #000, transparent 76%);
+    }
+
+    #particles {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cursor-glow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #72d9be13, transparent 68%);
+      transform: translate(-800px, -800px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .cursor-ring {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      border: 1px solid #86e4c46b;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      transition: width .2s, height .2s, border-color .2s, opacity .25s;
+      mix-blend-mode: screen;
+    }
+
+    .cursor-ring.active {
+      width: 52px;
+      height: 52px;
+      border-color: #86e4c4d9;
+    }
+
+    .topbar {
+      max-width: 1440px;
+      margin: auto;
+      padding: 32px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: reveal .9s both;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: var(--accent-dark);
+      box-shadow: 0 8px 30px #65d5ae20, inset 0 1px 0 #ffffff70;
+    }
+
+    .brand-mark svg { width: 26px; height: 26px; }
+
+    .brand-name {
+      font-size: 31px;
+      letter-spacing: -1.5px;
+      font-weight: 750;
+    }
+
+    .brand-caption {
+      margin-top: 1px;
+      font-size: 8px;
+      letter-spacing: 2.7px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .theme-button {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text);
+      background: var(--panel);
+      backdrop-filter: blur(20px);
+      transition: transform .35s, background .35s;
+    }
+
+    .theme-button:hover { transform: rotate(30deg); }
+
+    .layout {
+      max-width: 1240px;
+      margin: auto;
+      padding: 35px 45px 75px;
+      min-height: calc(100svh - 112px);
+      display: grid;
+      grid-template-columns: 1.12fr 1fr;
+      align-items: center;
+      gap: 95px;
+    }
+
+    .story { animation: reveal 1s .12s both; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: 2.6px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .pulse-dot {
+      position: relative;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .pulse-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border: 1px solid currentColor;
+      border-radius: inherit;
+      animation: pulse 2.5s ease-out infinite;
+    }
+
+    h1 {
+      margin: 27px 0 22px;
+      font-size: clamp(48px, 5.2vw, 75px);
+      line-height: 1.06;
+      font-weight: 580;
+      letter-spacing: -4px;
+    }
+
+    .gradient-text {
+      display: inline-block;
+      background: linear-gradient(
+        110deg, var(--accent), #7abacb, #a79ade, var(--accent)
+      );
+      background-size: 300% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: textFlow 9s linear infinite;
+    }
+
+    .story-description {
+      max-width: 370px;
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--muted);
+    }
+
+    .book-scene {
+      position: relative;
+      width: 340px;
+      height: 205px;
+      margin-top: 35px;
+      perspective: 800px;
+    }
+
+    .scene-halo {
+      position: absolute;
+      width: 270px;
+      height: 85px;
+      left: 5px;
+      bottom: 12px;
+      border-radius: 50%;
+      background: #75cfb312;
+      border: 1px solid #75cfb31c;
+      transform: rotate(-12deg);
+      box-shadow: 0 0 0 16px #75cfb305, 0 0 0 34px #75cfb303;
+      animation: halo 7s ease-in-out infinite;
+    }
+
+    .book {
+      position: absolute;
+      bottom: 35px;
+      width: 79px;
+      height: 136px;
+      padding: 19px 12px;
+      border-radius: 4px 11px 11px 4px;
+      border-left: 7px solid #00000021;
+      border-top: 1px solid #ffffff40;
+      box-shadow: 16px 17px 30px #0002, inset -3px 0 0 #ffffff15;
+      color: #fff;
+      transform-style: preserve-3d;
+      animation: bookFloat 6s ease-in-out infinite;
+    }
+
+    .book::before {
+      content: "";
+      position: absolute;
+      left: 9px;
+      right: 9px;
+      bottom: 12px;
+      height: 3px;
+      border-top: 1px solid #ffffff50;
+      border-bottom: 1px solid #ffffff30;
+    }
+
+    .book small {
+      display: block;
+      font-size: 6px;
+      letter-spacing: 1.5px;
+      opacity: .7;
+    }
+
+    .book strong {
+      display: block;
+      margin-top: 21px;
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+
+    .book.a {
+      --rotation: -17deg;
+      left: 25px;
+      background: linear-gradient(135deg, #5c9984, #24564d);
+      z-index: 3;
+    }
+
+    .book.b {
+      --rotation: 2deg;
+      left: 116px;
+      bottom: 47px;
+      height: 150px;
+      background: linear-gradient(135deg, #6c80ac, #364668);
+      animation-delay: -2s;
+      z-index: 2;
+    }
+
+    .book.c {
+      --rotation: 17deg;
+      left: 205px;
+      background: linear-gradient(135deg, #b39873, #6f5945);
+      animation-delay: -4s;
+    }
+
+    .orbit-star {
+      position: absolute;
+      right: 0;
+      top: 5px;
+      color: var(--accent);
+      font-size: 24px;
+      animation: starTurn 14s linear infinite;
+    }
+
+    .story-footer {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .story-footer::before {
+      content: "";
+      width: 31px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    .card-entrance {
+      width: 100%;
+      max-width: 455px;
+      animation: reveal 1.1s .25s both;
+      perspective: 1100px;
+    }
+
+    .card-border {
+      position: relative;
+      padding: 1px;
+      border-radius: 28px;
+      background: var(--border);
+      isolation: isolate;
+      box-shadow: 0 35px 100px var(--shadow);
+      transform:
+        rotateX(var(--rx, 0deg))
+        rotateY(var(--ry, 0deg));
+      transition: transform .3s ease-out;
+    }
+
+    .card-border::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      border-radius: inherit;
+      background: conic-gradient(
+        from var(--angle),
+        transparent 0deg,
+        transparent 235deg,
+        #86e4c490 285deg,
+        #8faee6a0 320deg,
+        transparent 360deg
+      );
+      animation: borderSpin 9s linear infinite;
+    }
+
+    @property --angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    .login-card {
+      position: relative;
+      border-radius: 27px;
+      padding: 37px;
+      background: var(--panel);
+      backdrop-filter: blur(38px);
+      -webkit-backdrop-filter: blur(38px);
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(
+        350px circle at var(--cx, 50%) var(--cy, 0%),
+        #ffffff08,
+        transparent 70%
+      );
+    }
+
+    .card-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .welcome-icon {
+      width: 45px;
+      height: 45px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      background: var(--soft);
+    }
+
+    .workspace-label {
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 26px 0 9px;
+      font-size: 31px;
+      letter-spacing: -1.3px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 29px;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .field { margin-bottom: 19px; }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      margin-bottom: 9px;
+      font-weight: 550;
+    }
+
+    .input-shell { position: relative; }
+
+    .input-shell > svg {
+      position: absolute;
+      left: 15px;
+      top: 17px;
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      pointer-events: none;
+      transition: color .2s, transform .2s;
+    }
+
+    .input-shell:focus-within > svg {
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      height: 53px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--input);
+      color: var(--text);
+      padding: 0 45px;
+      font-size: 13px;
+      transition: border-color .25s, box-shadow .25s, background .25s;
+    }
+
+    input::placeholder { color: var(--muted); opacity: .65; }
+
+    .input-shell input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--soft);
+    }
+
+    input:-webkit-autofill {
+      -webkit-text-fill-color: var(--text);
+      transition: background-color 99999s ease-in-out 0s;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 7px;
+      top: 7px;
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      transition: color .2s, background .2s;
+    }
+
+    .password-toggle:hover {
+      color: var(--accent);
+      background: var(--soft);
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: fit-content;
+      margin: 7px 0 25px;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .remember input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .submit-wrap { padding: 5px 0; }
+
+    .submit {
+      width: 100%;
+      min-height: 53px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border: 1px solid #ffffff20;
+      border-radius: 12px;
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-size: 12px;
+      font-weight: 750;
+      box-shadow: 0 8px 30px #75cfb316, inset 0 1px 0 #ffffff50;
+      transform: translate(var(--bx, 0px), var(--by, 0px));
+      transition: transform .2s ease-out, box-shadow .3s, opacity .3s;
+    }
+
+    .submit::before {
+      content: "";
+      position: absolute;
+      inset: -100% auto -100% -70%;
+      width: 45%;
+      background: linear-gradient(90deg, transparent, #ffffff65, transparent);
+      transform: skewX(-25deg);
+      animation: buttonShine 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .submit:hover { box-shadow: 0 12px 35px #75cfb330; }
+    .submit:active { scale: .98; }
+    .submit:disabled { opacity: .82; }
+
+    .submit svg {
+      width: 17px;
+      height: 17px;
+      transition: transform .25s;
+    }
+
+    .submit:hover svg { transform: translateX(4px); }
+
+    .error {
+      color: var(--error);
+      font-size: 11px;
+      line-height: 1.6;
+      border-radius: 9px;
+    }
+
+    .error:not(:empty) {
+      padding: 11px 12px;
+      margin-top: 15px;
+      border: 1px solid #ed80942b;
+      background: #ed80940b;
+      animation: reveal .25s both;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 26px;
+      padding-top: 23px;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-footer svg { width: 13px; height: 13px; }
+
+    .below-card {
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      margin: 24px 0 0;
+      letter-spacing: .3px;
+    }
+
+    .spinner {
+      width: 17px;
+      height: 17px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .shake { animation: shake .4s ease-in-out; }
+
+    .success .login-card {
+      box-shadow: inset 0 0 50px #75cfb311;
+    }
+
+    .success .welcome-icon {
+      background: var(--accent);
+      color: var(--accent-dark);
+      animation: successPop .5s ease;
+    }
+
+    .leaving .layout {
+      opacity: 0;
+      transform: translateY(-12px) scale(.985);
+      transition: opacity .35s, transform .35s;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(23px); filter: blur(5px); }
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    @keyframes drift {
+      to { transform: translate(100px, 65px) scale(1.17); }
+    }
+
+    @keyframes pulse {
+      0% { opacity: .7; transform: scale(.6); }
+      100% { opacity: 0; transform: scale(2.1); }
+    }
+
+    @keyframes textFlow { to { background-position: 300% center; } }
+    @keyframes borderSpin { to { --angle: 360deg; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes bookFloat {
+      0%, 100% {
+        transform: translateY(0) rotate(var(--rotation)) rotateY(-10deg);
+      }
+      50% {
+        transform: translateY(-13px) rotate(var(--rotation)) rotateY(5deg);
+      }
+    }
+
+    @keyframes halo {
+      50% { transform: rotate(-12deg) scale(1.08); opacity: .6; }
+    }
+
+    @keyframes starTurn {
+      50% { opacity: .3; }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes buttonShine {
+      0%, 65% { left: -70%; }
+      85%, 100% { left: 140%; }
+    }
+
+    @keyframes shake {
+      0%, 100% { translate: 0; }
+      25%, 75% { translate: -5px; }
+      50% { translate: 5px; }
+    }
+
+    @keyframes successPop {
+      50% { transform: scale(1.15); }
+    }
+
+    @media (max-width: 1000px) {
+      .layout { gap: 45px; padding-inline: 35px; }
+      h1 { font-size: 55px; letter-spacing: -3px; }
+      .login-card { padding: 29px; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { padding: 23px 25px; }
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 20px 24px 45px;
+        max-width: 530px;
+        min-height: auto;
+      }
+      .story { text-align: center; }
+      .eyebrow { font-size: 8px; letter-spacing: 2px; }
+      h1 { font-size: 43px; letter-spacing: -2px; margin: 18px 0 10px; }
+      .story-description, .book-scene, .story-footer { display: none; }
+      .card-entrance { max-width: none; }
+      .login-card { padding: 30px 27px; }
+      h2 { font-size: 29px; }
+      .orb { opacity: .13; }
+    }
+
+    @media (pointer: coarse) {
+      .cursor-ring, .cursor-glow { display: none; }
+      .card-border { transform: none !important; }
+      .submit { transform: none !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+      .cursor-ring, .cursor-glow { display: none; }
+      .card-border, .submit { transform: none !important; }
+    }
+  </style>
 </head>
-<body data-page="login" data-root=""><main class="centered"><div class="skeleton" role="status" aria-label="Loading your workspace"></div><noscript>Folio needs JavaScript enabled to run its browser-only demo.</noscript></main></body>
+
+<body>
+  <div class="ambient" aria-hidden="true">
+    <div class="orb one"></div>
+    <div class="orb two"></div>
+    <div class="orb three"></div>
+    <div class="grid"></div>
+    <canvas id="particles"></canvas>
+  </div>
+
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+  <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand" aria-label="Folio Library">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 4h5a4 4 0 0 1 4 4v13a5 5 0 0 0-5-3H3z"/>
+          <path d="M21 4h-5a4 4 0 0 0-4 4v13a5 5 0 0 1 5-3h4z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">folio</div>
+        <div class="brand-caption">Library, thoughtfully.</div>
+      </div>
+    </div>
+
+    <button class="theme-button" id="themeToggle"
+            type="button" aria-label="Switch color theme">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="layout">
+    <section class="story">
+      <div class="eyebrow">
+        <span class="pulse-dot"></span>
+        A space for curious minds
+      </div>
+
+      <h1>
+        Great stories.<br>
+        New ideas.<br>
+        <span class="gradient-text">Endless possibility.</span>
+      </h1>
+
+      <p class="story-description">
+        Bring your collection and community together
+        in one thoughtful library workspace.
+      </p>
+
+      <div class="book-scene" aria-hidden="true">
+        <div class="scene-halo"></div>
+        <div class="book a">
+          <small>THE COLLECTION</small>
+          <strong>Stay<br>curious.</strong>
+        </div>
+        <div class="book b">
+          <small>NEW PERSPECTIVES</small>
+          <strong>Beyond<br>the page.</strong>
+        </div>
+        <div class="book c">
+          <small>EVERYDAY IDEAS</small>
+          <strong>Open<br>your world.</strong>
+        </div>
+        <span class="orbit-star">✧</span>
+      </div>
+
+      <div class="story-footer">Your next chapter starts here.</div>
+    </section>
+
+    <section class="card-entrance" aria-labelledby="loginTitle">
+      <div class="card-border" id="loginCard">
+        <div class="login-card">
+          <div class="card-topline">
+            <div class="welcome-icon" id="welcomeIcon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14 8l4 4-4 4M18 12H6"/>
+                <path d="M10 3H4v18h6M15 3h5v18h-5"/>
+              </svg>
+            </div>
+            <span class="workspace-label">Your library workspace</span>
+          </div>
+
+          <h2 id="loginTitle">Welcome back.</h2>
+          <p class="subtitle">Sign in and pick up where you left off.</p>
+
+          <form id="loginForm">
+            <div class="field">
+              <label class="field-label" for="email">Email address</label>
+              <div class="input-shell">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="3"/>
+                  <path d="m3 7 9 6 9-6"/>
+                </svg>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  autocomplete="username"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="password">Password</label>
+              <div class="input-shell">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="4" y="10" width="16" height="11" rx="3"/>
+                  <path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>
+                </svg>
+
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  autocomplete="current-password"
+                  required
+                >
+
+                <button
+                  class="password-toggle"
+                  id="passwordToggle"
+                  type="button"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                  aria-controls="password"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7"/>
+                    <circle cx="12" cy="12" r="3"/>
+                    <path id="eyeSlash" d="m4 4 16 16" style="display:none"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <label class="remember">
+              <input id="remember" type="checkbox">
+              Remember me on this browser
+            </label>
+
+            <div class="submit-wrap" id="submitWrap">
+              <button class="submit" id="submitButton" type="submit">
+                <span>Sign in to Folio</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12h16m-6-6 6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="error" id="loginError"
+                 role="alert" aria-live="polite"></div>
+          </form>
+
+          <div class="card-footer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 8v4l3 2"/>
+            </svg>
+            <span id="liveGreeting">Your workspace is ready.</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="below-card">Folio Library · A little more possibility.</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = id => document.getElementById(id);
+      const config = window.Folio?.config;
+      const namespace = config?.namespace || "folio_library_";
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      const finePointer = matchMedia("(pointer: fine)");
+
+      const form = $("loginForm");
+      const card = $("loginCard");
+      const button = $("submitButton");
+      const error = $("loginError");
+      const originalButton = button.innerHTML;
+
+      const checkIcon = `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m5 12 4 4L20 5"/>
+        </svg>
+      `;
+
+      function read(storage, key) {
+        try {
+          return JSON.parse(storage.getItem(namespace + key));
+        } catch {
+          return null;
+        }
+      }
+
+      // Preserve the theme selected elsewhere in your existing app.
+      try {
+        const savedTheme = read(localStorage, "theme");
+        document.documentElement.dataset.theme =
+          savedTheme === "light" ? "light" : "dark";
+      } catch {}
+
+      $("themeToggle").addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark"
+          ? "light"
+          : "dark";
+
+        document.documentElement.dataset.theme = next;
+
+        try {
+          localStorage.setItem(namespace + "theme", JSON.stringify(next));
+        } catch {}
+      });
+
+      $("passwordToggle").addEventListener("click", () => {
+        const input = $("password");
+        const show = input.type === "password";
+
+        input.type = show ? "text" : "password";
+        $("passwordToggle").setAttribute("aria-pressed", String(show));
+        $("passwordToggle").setAttribute(
+          "aria-label", show ? "Hide password" : "Show password"
+        );
+        $("eyeSlash").style.display = show ? "" : "none";
+      });
+
+      function updateGreeting() {
+        const hour = new Date().getHours();
+        const greeting = hour < 12
+          ? "Good morning"
+          : hour < 18
+            ? "Good afternoon"
+            : "Good evening";
+
+        $("liveGreeting").textContent =
+          `${greeting}. Your workspace is ready.`;
+      }
+
+      updateGreeting();
+      setInterval(updateGreeting, 60000);
+
+      // Match the session format used by your existing application.
+      try {
+        const session =
+          read(localStorage, "session") ||
+          read(sessionStorage, "session");
+
+        if (config && session?.email === config.email) {
+          location.replace("pages/dashboard.html");
+        }
+      } catch {}
+
+      function showError(message) {
+        error.textContent = message;
+        card.classList.remove("shake");
+        void card.offsetWidth;
+        card.classList.add("shake");
+        setTimeout(() => card.classList.remove("shake"), 450);
+      }
+
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (button.disabled) return;
+
+        error.textContent = "";
+
+        if (!config?.email || !config?.password) {
+          showError(
+            "Login configuration is missing. Check assets/js/config.js."
+          );
+          return;
+        }
+
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+        button.innerHTML =
+          '<span class="spinner"></span><span>Opening your workspace…</span>';
+
+        let signedIn = false;
+
+        try {
+          await delay(reduceMotion.matches ? 0 : 450);
+
+          const email = $("email").value.trim().toLowerCase();
+          const password = $("password").value;
+
+          if (
+            email !== String(config.email).trim().toLowerCase() ||
+            password !== config.password
+          ) {
+            showError("The email or password is incorrect. Please try again.");
+            $("password").focus();
+            return;
+          }
+
+          const remember = $("remember").checked;
+          const session = {
+            email: config.email,
+            remember,
+            at: new Date().toISOString()
+          };
+
+          try {
+            localStorage.removeItem(namespace + "session");
+            sessionStorage.removeItem(namespace + "session");
+
+            const storage = remember ? localStorage : sessionStorage;
+            storage.setItem(
+              namespace + "session",
+              JSON.stringify(session)
+            );
+          } catch {
+            showError(
+              "Your browser could not save the session. Allow site storage and try again."
+            );
+            return;
+          }
+
+          signedIn = true;
+          card.classList.add("success");
+          $("welcomeIcon").innerHTML = checkIcon;
+          button.innerHTML = checkIcon + "<span>Welcome back!</span>";
+
+          await delay(reduceMotion.matches ? 0 : 500);
+          document.body.classList.add("leaving");
+          await delay(reduceMotion.matches ? 0 : 300);
+
+          location.assign("pages/dashboard.html");
+
+        } catch {
+          showError("Unable to complete sign-in. Please try again.");
+
+        } finally {
+          if (!signedIn) {
+            button.disabled = false;
+            button.removeAttribute("aria-busy");
+            button.innerHTML = originalButton;
+          }
+        }
+      });
+
+      // Card follows the cursor with a restrained 3D tilt.
+      card.addEventListener("pointermove", event => {
+        if (!finePointer.matches || reduceMotion.matches) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+
+        card.style.setProperty("--rx", `${(0.5 - y) * 7}deg`);
+        card.style.setProperty("--ry", `${(x - 0.5) * 7}deg`);
+        card.style.setProperty("--cx", `${x * 100}%`);
+        card.style.setProperty("--cy", `${y * 100}%`);
+      });
+
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+        card.style.setProperty("--cx", "50%");
+        card.style.setProperty("--cy", "0%");
+      });
+
+      // Magnetic submit button.
+      $("submitWrap").addEventListener("pointermove", event => {
+        if (
+          !finePointer.matches ||
+          reduceMotion.matches ||
+          button.disabled
+        ) return;
+
+        const rect = $("submitWrap").getBoundingClientRect();
+
+        button.style.setProperty(
+          "--bx",
+          `${(event.clientX - rect.left - rect.width / 2) * .035}px`
+        );
+        button.style.setProperty(
+          "--by",
+          `${(event.clientY - rect.top - rect.height / 2) * .12}px`
+        );
+      });
+
+      $("submitWrap").addEventListener("pointerleave", () => {
+        button.style.setProperty("--bx", "0px");
+        button.style.setProperty("--by", "0px");
+      });
+
+      // Cursor halo, trailing ring and an interactive particle field.
+      const canvas = $("particles");
+      const ctx = canvas.getContext("2d");
+      const ring = $("cursorRing");
+      const glow = $("cursorGlow");
+
+      if (!ctx) return;
+
+      let width = innerWidth;
+      let height = innerHeight;
+      let dots = [];
+      let sparks = [];
+      let frame = 0;
+      let lastTime = 0;
+      let lastSpark = 0;
+
+      const mouse = { x: -1000, y: -1000, inside: false };
+      const follower = { x: -1000, y: -1000 };
+
+      function resize() {
+        width = innerWidth;
+        height = innerHeight;
+
+        const ratio = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        const count = width < 760 ? 24 : 52;
+
+        dots = Array.from({ length: count }, () => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - .5) * .22,
+          vy: (Math.random() - .5) * .22,
+          radius: .7 + Math.random() * 1.2
+        }));
+
+        if (reduceMotion.matches) paint(1);
+      }
+
+      function paint(step) {
+        ctx.clearRect(0, 0, width, height);
+
+        const light = document.documentElement.dataset.theme === "light";
+        const color = light ? "40,117,94" : "145,219,196";
+
+        for (let i = 0; i < dots.length; i++) {
+          const dot = dots[i];
+
+          if (!reduceMotion.matches) {
+            dot.x += dot.vx * step;
+            dot.y += dot.vy * step;
+
+            if (dot.x < -10) dot.x = width + 10;
+            if (dot.x > width + 10) dot.x = -10;
+            if (dot.y < -10) dot.y = height + 10;
+            if (dot.y > height + 10) dot.y = -10;
+          }
+
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${color},.30)`;
+          ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          for (let j = i + 1; j < dots.length; j++) {
+            const other = dots[j];
+            const distance = Math.hypot(dot.x - other.x, dot.y - other.y);
+
+            if (distance < 115) {
+              ctx.beginPath();
+              ctx.strokeStyle =
+                `rgba(${color},${(1 - distance / 115) * .10})`;
+              ctx.lineWidth = .6;
+              ctx.moveTo(dot.x, dot.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.stroke();
+            }
+          }
+
+          if (mouse.inside && !reduceMotion.matches) {
+            const distance = Math.hypot(dot.x - mouse.x, dot.y - mouse.y);
+
+            if (distance < 150) {
+              ctx.beginPath();
+              ctx.strokeStyle =
+                `rgba(${color},${(1 - distance / 150) * .28})`;
+              ctx.lineWidth = .7;
+              ctx.moveTo(dot.x, dot.y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        sparks = sparks.filter(spark => spark.life > 0);
+
+        for (const spark of sparks) {
+          spark.x += spark.vx * step;
+          spark.y += spark.vy * step;
+          spark.life -= .035 * step;
+
+          ctx.beginPath();
+          ctx.fillStyle =
+            `rgba(${color},${Math.max(0, spark.life) * .5})`;
+          ctx.arc(spark.x, spark.y, Math.max(.2, spark.life * 2), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function animate(time) {
+        frame = 0;
+
+        if (document.hidden || reduceMotion.matches) return;
+
+        const step = lastTime
+          ? Math.min((time - lastTime) / 16.67, 2)
+          : 1;
+
+        lastTime = time;
+
+        if (finePointer.matches && mouse.inside) {
+          const smoothing = 1 - Math.pow(.84, step);
+          follower.x += (mouse.x - follower.x) * smoothing;
+          follower.y += (mouse.y - follower.y) * smoothing;
+
+          ring.style.transform =
+            `translate(${follower.x}px,${follower.y}px) translate(-50%,-50%)`;
+
+          glow.style.transform =
+            `translate(${mouse.x - 240}px,${mouse.y - 240}px)`;
+        }
+
+        paint(step);
+        frame = requestAnimationFrame(animate);
+      }
+
+      function startAnimation() {
+        if (!frame && !document.hidden && !reduceMotion.matches) {
+          lastTime = 0;
+          frame = requestAnimationFrame(animate);
+        }
+      }
+
+      document.addEventListener("pointermove", event => {
+        if (!finePointer.matches || reduceMotion.matches) return;
+
+        if (!mouse.inside) {
+          follower.x = event.clientX;
+          follower.y = event.clientY;
+        }
+
+        mouse.x = event.clientX;
+        mouse.y = event.clientY;
+        mouse.inside = true;
+        ring.style.opacity = ".8";
+
+        const now = performance.now();
+
+        if (now - lastSpark > 30) {
+          sparks.push({
+            x: mouse.x,
+            y: mouse.y,
+            vx: (Math.random() - .5) * .8,
+            vy: (Math.random() - .5) * .8,
+            life: 1
+          });
+
+          if (sparks.length > 30) sparks.shift();
+          lastSpark = now;
+        }
+      }, { passive: true });
+
+      document.addEventListener("pointerover", event => {
+        ring.classList.toggle(
+          "active",
+          !!event.target.closest("button, input, a, label")
+        );
+      });
+
+      document.documentElement.addEventListener("pointerleave", () => {
+        mouse.inside = false;
+        ring.style.opacity = "0";
+        glow.style.transform = "translate(-800px,-800px)";
+      });
+
+      document.addEventListener("visibilitychange", startAnimation);
+
+      reduceMotion.addEventListener("change", () => {
+        if (reduceMotion.matches) {
+          cancelAnimationFrame(frame);
+          frame = 0;
+          sparks = [];
+          paint(1);
+        } else {
+          startAnimation();
+        }
+      });
+
+      let resizeTimer;
+      addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 120);
+      });
+
+      resize();
+      startAnimation();
+    })();
+  </script>
+</body>
 </html>
