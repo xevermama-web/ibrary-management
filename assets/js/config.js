@@ -1,7 +1,7 @@
 /* Folio Library — dependency-free, browser-only demo */
 'use strict';
 window.Folio = window.Folio || {};
-Folio.config = {version:1, namespace:'folio_library_', email:'fbur@gmail.com', password:'fbur&brothers', vaultPassword:'Vault@2026!', maxChars:2300000};
+Folio.config = {version:1, namespace:'folio_library_', email:'samanta@gmail.com', password:'samanta123', vaultPassword:'Vault@2026!', maxChars:2300000};
 Folio.util = {
   today:()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;},
   date:(days=0,base)=>{const d=new Date((base||Folio.util.today())+'T12:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;},
